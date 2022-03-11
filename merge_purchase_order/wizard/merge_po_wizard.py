@@ -5,6 +5,7 @@ from odoo.exceptions import UserError
 class MergePO(models.TransientModel):
     _name = "merge.po"
     merge_options = fields.Selection([
+        ('new', 'New'),
         ('new_cancel', 'New and cancel all'),
         ('new_delete', 'New and delete all'),
         ('merge_cancel', 'Merge and cancel another one'),
@@ -33,22 +34,40 @@ class MergePO(models.TransientModel):
             raise UserError('Must be same vendor')
         if any(po.state != 'draft' for po in po_ids):
             raise UserError('Any PO must be RFO')
-        if self.merge_options == 'new_cancel':
+        if self.merge_options == 'new':
             new_po = self.env['purchase.order'].create({'partner_id': partner})
             for order in po_ids:
                 for line in order.order_line:
-                    exiting_order_line = False
+                    existing_order_line = False
+                    if new_po.order_line:
+                        for po_line in new_po.order_line:
+                            if po_line.product_id == line.product_id and po_line.price_unit == line.price_unit:
+                                existing_order_line = po_line
+                                break
+                    if existing_order_line:
+                        existing_order_line.product_qty += line.product_qty
+                        po_taxes = [tax.id for tax in existing_order_line.taxes_id]
+                        for tax in line.taxes_id:
+                            po_taxes.append(tax.id)
+                        existing_order_line.taxes_id = [(6, 0, po_taxes)]
+                    else:
+                        line.copy(default={'order_id': new_po.id})
+        elif self.merge_options == 'new_cancel':
+            new_po = self.env['purchase.order'].create({'partner_id': partner})
+            for order in po_ids:
+                for line in order.order_line:
+                    existing_order_line = False
                     if new_po.order_line:
                         for new_po_line in new_po.order_line:
                             if new_po_line.product_id == line.product_id and new_po_line.price_unit == line.price_unit:
-                                exiting_order_line = new_po_line
+                                existing_order_line = new_po_line
                                 break
-                    if exiting_order_line:
-                        exiting_order_line.product_qty += line.product_qty
-                        po_taxes = [tax.id for tax in exiting_order_line.taxes_id]
+                    if existing_order_line:
+                        existing_order_line.product_qty += line.product_qty
+                        po_taxes = [tax.id for tax in existing_order_line.taxes_id]
                         for tax in line.taxes_id:
                             po_taxes.append(tax.id)
-                        exiting_order_line.taxes_id = [(6, 0, po_taxes)]
+                        existing_order_line.taxes_id = [(6, 0, po_taxes)]
                     else:
                         line.copy(default={'order_id': new_po.id})
                 order.button_cancel()
@@ -56,18 +75,18 @@ class MergePO(models.TransientModel):
             new_po = self.env['purchase.order'].create({'partner_id': partner})
             for order in po_ids:
                 for line in order.order_line:
-                    exiting_order_line = False
+                    existing_order_line = False
                     if new_po.order_line:
                         for new_po_line in new_po.order_line:
                             if new_po_line.product_id == line.product_id and new_po_line.price_unit == line.price_unit:
-                                exiting_order_line = new_po_line
+                                existing_order_line = new_po_line
                                 break
-                    if exiting_order_line:
-                        exiting_order_line.product_qty += line.product_qty
-                        po_taxes = [tax.id for tax in exiting_order_line.taxes_id]
+                    if existing_order_line:
+                        existing_order_line.product_qty += line.product_qty
+                        po_taxes = [tax.id for tax in existing_order_line.taxes_id]
                         for tax in line.taxes_id:
                             po_taxes.append(tax.id)
-                        exiting_order_line.taxes_id = [(6, 0, po_taxes)]
+                        existing_order_line.taxes_id = [(6, 0, po_taxes)]
                     else:
                         line.copy(default={'order_id': new_po.id})
             for order in po_ids:
@@ -81,18 +100,18 @@ class MergePO(models.TransientModel):
                     pass
                 else:
                     for line in order.order_line:
-                        exiting_order_line = False
+                        existing_order_line = False
                         if po.order_line:
                             for po_line in po.order_line:
                                 if po_line.product_id == line.product_id and po_line.price_unit == line.price_unit:
-                                    exiting_order_line = po_line
+                                    existing_order_line = po_line
                                     break
-                        if exiting_order_line:
-                            exiting_order_line.product_qty += line.product_qty
-                            po_taxes = [tax.id for tax in exiting_order_line.taxes_id]
+                        if existing_order_line:
+                            existing_order_line.product_qty += line.product_qty
+                            po_taxes = [tax.id for tax in existing_order_line.taxes_id]
                             for tax in line.taxes_id:
                                 po_taxes.append(tax.id)
-                            exiting_order_line.taxes_id = [(6, 0, po_taxes)]
+                            existing_order_line.taxes_id = [(6, 0, po_taxes)]
                         else:
                             line.copy(default=default)
             for order in po_ids:
@@ -106,18 +125,18 @@ class MergePO(models.TransientModel):
                     pass
                 else:
                     for line in order.order_line:
-                        exiting_order_line = False
+                        existing_order_line = False
                         if po.order_line:
                             for po_line in po.order_line:
                                 if po_line.product_id == line.product_id and po_line.price_unit == line.price_unit:
-                                    exiting_order_line = po_line
+                                    existing_order_line = po_line
                                     break
-                        if exiting_order_line:
-                            exiting_order_line.product_qty += line.product_qty
-                            po_taxes = [tax.id for tax in exiting_order_line.taxes_id]
+                        if existing_order_line:
+                            existing_order_line.product_qty += line.product_qty
+                            po_taxes = [tax.id for tax in existing_order_line.taxes_id]
                             for tax in line.taxes_id:
                                 po_taxes.append(tax.id)
-                            exiting_order_line.taxes_id = [(6, 0, po_taxes)]
+                            existing_order_line.taxes_id = [(6, 0, po_taxes)]
                         else:
                             line.copy(default=default)
             for order in po_ids:

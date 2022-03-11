@@ -9,8 +9,8 @@
                     <group>
                         <field name="merge_options"/>
                         <field name="po_active_id"
-                               attrs="{'invisible':[('merge_options','in',['new_cancel','new_delete'])],
-                               'required':[('merge_options','not in',['new_cancel','new_delete'])]}"/>
+                               attrs="{'invisible':[('merge_options','in',['new','new_cancel','new_delete'])],
+                               'required':[('merge_options','not in',['new','new_cancel','new_delete'])]}"/>
                     </group>
                     <footer>
                         <button name="merge"

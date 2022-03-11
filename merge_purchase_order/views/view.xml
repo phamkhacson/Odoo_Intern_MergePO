@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <record id="merge_po_view" model="ir.ui.view">
+            <field name="name">merge.po.view</field>
+            <field name="model">merge.po</field>
+            <field name="arch" type="xml">
+                <form string="Purchase order merge">
+                    <group>
+                        <field name="merge_options"/>
+                        <field name="po_active_id"
+                               attrs="{'invisible':[('merge_options','in',['new_cancel','new_delete'])],
+                               'required':[('merge_options','not in',['new_cancel','new_delete'])]}"/>
+                    </group>
+                    <footer>
+                        <button name="merge"
+                                string="Merger PO"
+                                type="object"
+                                class="btn-primary"/>
+                        <button string="Cancel"
+                                class="btn-default"
+                                special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="merger_po_action" model="ir.actions.act_window">
+            <field name="name">Merger PO</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">merge.po</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="merge_po_view"/>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="purchase.model_purchase_order"/>
+        </record>
+    </data>
+</odoo>
